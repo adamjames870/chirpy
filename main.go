@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"sync/atomic"
+
+	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
@@ -32,6 +34,7 @@ func main() {
 	// ----------- API Handlers ----------------
 
 	mux.HandleFunc("GET /api/healthz", readinessHandler)
+	mux.HandleFunc("POST /api/validate_chirp", handlerApiValidateChirp)
 
 	// ----------- Admin Handlers ----------------
 
