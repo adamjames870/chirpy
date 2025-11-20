@@ -18,13 +18,6 @@ func (s *apiState) handlerApiCreateUser(w http.ResponseWriter, r *http.Request) 
 		Email string `json:"email"`
 	}
 
-	type returnVal struct {
-		Id        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Email     string    `json:"email"`
-	}
-
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	errDecode := decoder.Decode(&params)
@@ -39,7 +32,7 @@ func (s *apiState) handlerApiCreateUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	rv := returnVal{
+	rv := user{
 		Id:        usr.ID,
 		CreatedAt: usr.CreatedAt,
 		UpdatedAt: usr.UpdatedAt,

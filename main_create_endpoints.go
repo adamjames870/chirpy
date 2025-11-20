@@ -15,8 +15,10 @@ func (state *apiState) CreateEndpoints() error {
 	// ----------- API Handlers ----------------
 
 	state.mux.HandleFunc("GET /api/healthz", readinessHandler)
-	state.mux.HandleFunc("POST /api/validate_chirp", handlerApiValidateChirp)
+	state.mux.HandleFunc("POST /api/chirps", state.handlerApiCreateChirp)
 	state.mux.HandleFunc("POST /api/users", state.handlerApiCreateUser)
+	state.mux.HandleFunc("GET /api/chirps", state.handlerApiGetAllChirps)
+	state.mux.HandleFunc("GET /api/chirps/{chirpID}", state.handlerGetSingleChirp)
 
 	// ----------- Admin Handlers ----------------
 
