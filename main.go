@@ -1,15 +1,20 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 	"sync/atomic"
 
+	"github.com/adamjames870/chirpy/internal/database"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	dbQueries      database.Queries
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -20,7 +25,13 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 }
 
 func main() {
+
 	var apiCfg apiConfig
+
+	godotenv.Load()
+	dbQueries := database.New(loadDb())
+	apiCfg.dbQueries = *dbQueries
+
 	mux := http.NewServeMux()
 
 	// ----------- File Handlers ---------------
@@ -67,4 +78,14 @@ func (cfg *apiConfig) metricsResetHandler(writer http.ResponseWriter, req *http.
 	writer.WriteHeader(http.StatusOK)
 	cfg.fileserverHits.Store(0)
 	writer.Write([]byte("Reset metrics to zero"))
+}
+
+func loadDb() *sql.DB {
+	dbUrl := os.Getenv("DB_URL")
+	db, errDb := sql.Open("postgres", dbUrl)
+	if errDb != nil {
+		fmt.Println("Unable to load DB: " + errDb.Error())
+		os.Exit(1)
+	}
+	return db
 }
