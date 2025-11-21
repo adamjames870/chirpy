@@ -12,4 +12,5 @@ type apiState struct {
 	dbQueries      *database.Queries
 	mux            *http.ServeMux
 	platform       string
+	secret_string  string
 }

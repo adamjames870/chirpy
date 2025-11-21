@@ -3,30 +3,33 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
+	"github.com/adamjames870/chirpy/internal/auth"
 	"github.com/adamjames870/chirpy/internal/database"
 	"github.com/google/uuid"
 )
+
+type paramsCreateUser struct {
+	Password string `jason:"password"`
+	Email    string `json:"email"`
+}
 
 func (s *apiState) handlerApiCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	// POST api/users
 
-	type parameters struct {
-		Email string `json:"email"`
-	}
-
 	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
+	params := paramsCreateUser{}
 	errDecode := decoder.Decode(&params)
 	if errDecode != nil {
 		respondWithError(w, 400, "unable to decode json: "+errDecode.Error())
 		return
 	}
 
-	usr, errUsr := writeNewUser(r.Context(), *s.dbQueries, params.Email)
+	usr, errUsr := writeNewUser(r.Context(), *s.dbQueries, params)
 	if errUsr != nil {
 		respondWithError(w, 400, "unable to create user: "+errUsr.Error())
 		return
@@ -43,12 +46,18 @@ func (s *apiState) handlerApiCreateUser(w http.ResponseWriter, r *http.Request) 
 
 }
 
-func writeNewUser(ctx context.Context, db database.Queries, email string) (database.User, error) {
-	params := database.CreateUserParams{
-		ID:        uuid.New(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		Email:     email,
+func writeNewUser(ctx context.Context, db database.Queries, params paramsCreateUser) (database.User, error) {
+	pwd, errPwd := auth.HashPassword(params.Password)
+	if errPwd != nil {
+		return database.User{}, errors.New("unable to create hash: " + errPwd.Error())
 	}
-	return db.CreateUser(ctx, params)
+
+	newParams := database.CreateUserParams{
+		ID:             uuid.New(),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+		Email:          params.Email,
+		HashedPassword: pwd,
+	}
+	return db.CreateUser(ctx, newParams)
 }

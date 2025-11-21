@@ -11,6 +11,7 @@ import (
 func (state *apiState) LoadState() error {
 	state.dbQueries = database.New(loadDb())
 	state.platform = loadPlatform()
+	state.secret_string = loadSecretString()
 	return nil
 }
 
@@ -26,4 +27,8 @@ func loadDb() *sql.DB {
 
 func loadPlatform() string {
 	return os.Getenv("PLATFORM")
+}
+
+func loadSecretString() string {
+	return os.Getenv("SECRET")
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/adamjames870/chirpy/internal/auth"
 	"github.com/adamjames870/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -26,12 +27,22 @@ func (s *apiState) handlerApiCreateChirp(w http.ResponseWriter, r *http.Request)
 		UserId uuid.UUID `json:"user_id"`
 	}
 
+	tkn, errTkn := auth.GetBearerToken(r.Header)
+	if errTkn != nil {
+		respondWithError(w, 400, "unable to parse token: "+errTkn.Error())
+	}
+
+	usrId, errUsrId := auth.ValidateJWT(tkn, s.secret_string)
+	if errUsrId != nil {
+		respondWithError(w, 401, errUsrId.Error())
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	errDecode := decoder.Decode(&params)
 
-	if err != nil {
-		respondWithError(w, 400, "unable to decode json: "+err.Error())
+	if errDecode != nil {
+		respondWithError(w, 400, "unable to decode json: "+errDecode.Error())
 		return
 	}
 
@@ -46,7 +57,7 @@ func (s *apiState) handlerApiCreateChirp(w http.ResponseWriter, r *http.Request)
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Body:      chirpBody,
-		UserID:    params.UserId,
+		UserID:    usrId,
 	}
 
 	savedChirp, errChirp := s.dbQueries.CreateChirp(r.Context(), newChirp)
