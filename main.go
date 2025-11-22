@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -24,9 +25,13 @@ func main() {
 	state.mux = http.NewServeMux()
 	state.CreateEndpoints()
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	server := http.Server{
 		Handler: state.mux,
-		Addr:    ":8080",
+		Addr:    ":" + port,
 	}
 	server.ListenAndServe()
 }
