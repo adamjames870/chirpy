@@ -15,7 +15,6 @@ func (state *apiState) CreateEndpoints() error {
 	// ----------- API Handlers ----------------
 
 	state.mux.HandleFunc("GET /api/healthz", readinessHandler)
-	state.mux.HandleFunc("POST /api/chirps", state.handlerApiCreateChirp)
 
 	state.mux.HandleFunc("POST /api/users", state.handlerApiCreateUser)
 	state.mux.HandleFunc("PUT /api/users", state.handlerApiUpdateUser)
@@ -23,8 +22,10 @@ func (state *apiState) CreateEndpoints() error {
 	state.mux.HandleFunc("POST /api/refresh", state.handlerApiRefreshToken)
 	state.mux.HandleFunc("POST /api/revoke", state.handlerApiRevokeToken)
 
+	state.mux.HandleFunc("POST /api/chirps", state.handlerApiCreateChirp)
 	state.mux.HandleFunc("GET /api/chirps", state.handlerApiGetAllChirps)
 	state.mux.HandleFunc("GET /api/chirps/{chirpID}", state.handlerGetSingleChirp)
+	state.mux.HandleFunc("DELETE /api/chirps/{chirpID}", state.handlerApiDeleteChirp)
 
 	// ----------- Admin Handlers ----------------
 
