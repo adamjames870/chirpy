@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/adamjames870/chirpy/internal/auth"
+	"github.com/adamjames870/chirpy/internal/database"
 )
 
 func (s *apiState) handlerApiLogin(w http.ResponseWriter, r *http.Request) {
@@ -13,9 +14,8 @@ func (s *apiState) handlerApiLogin(w http.ResponseWriter, r *http.Request) {
 	// POST/api/login
 
 	type paramsLogin struct {
-		Password         string `jason:"password"`
-		Email            string `json:"email"`
-		ExpiresInSeconds *int   `json:"expires_in_seconds"`
+		Password string `jason:"password"`
+		Email    string `json:"email"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -25,12 +25,6 @@ func (s *apiState) handlerApiLogin(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 400, "unable to decode json: "+errDecode.Error())
 		return
 	}
-
-	expiryTime := 60 * 60
-	if params.ExpiresInSeconds != nil && *params.ExpiresInSeconds < expiryTime {
-		expiryTime = *params.ExpiresInSeconds
-	}
-	expiryTime = expiryTime * int(time.Millisecond)
 
 	usr, errGetUser := s.dbQueries.GetUserByEmail(r.Context(), params.Email)
 	if errGetUser != nil {
@@ -48,17 +42,34 @@ func (s *apiState) handlerApiLogin(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 401, "Incorrect email or password")
 	}
 
-	tkn, errTkn := auth.MakeJWT(usr.ID, s.secret_string, time.Duration(expiryTime))
+	refreshTkn, _ := auth.MakeRefreshToken()
+
+	timeNow := time.Now()
+	rfParams := database.CreateRefreshTokenParams{
+		Token:     refreshTkn,
+		CreatedAt: timeNow,
+		UpdatedAt: timeNow,
+		UserID:    usr.ID,
+		ExpiresAt: timeNow.Add(expiryTimeRefreshToken),
+	}
+
+	savedRefreshToken, errRefreshToken := s.dbQueries.CreateRefreshToken(r.Context(), rfParams)
+	if errRefreshToken != nil {
+		respondWithError(w, 400, "error saving refresh token"+errRefreshToken.Error())
+	}
+
+	accessTkn, errTkn := auth.MakeJWT(usr.ID, s.secret_string, time.Duration(expiryTimeAccesToken))
 	if errTkn != nil {
 		respondWithError(w, 400, "unable to create token: "+errTkn.Error())
 	}
 
 	rv := user{
-		Id:        usr.ID,
-		CreatedAt: usr.CreatedAt,
-		UpdatedAt: usr.UpdatedAt,
-		Email:     usr.Email,
-		Token:     tkn,
+		Id:           usr.ID,
+		CreatedAt:    usr.CreatedAt,
+		UpdatedAt:    usr.UpdatedAt,
+		Email:        usr.Email,
+		Token:        accessTkn,
+		RefreshToken: savedRefreshToken.Token,
 	}
 
 	respondWithJSON(w, 200, rv)
