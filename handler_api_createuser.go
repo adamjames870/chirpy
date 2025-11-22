@@ -36,10 +36,11 @@ func (s *apiState) handlerApiCreateUser(w http.ResponseWriter, r *http.Request) 
 	}
 
 	rv := user{
-		Id:        usr.ID,
-		CreatedAt: usr.CreatedAt,
-		UpdatedAt: usr.UpdatedAt,
-		Email:     usr.Email,
+		Id:          usr.ID,
+		CreatedAt:   usr.CreatedAt,
+		UpdatedAt:   usr.UpdatedAt,
+		Email:       usr.Email,
+		IsChirpyRed: usr.IsChirpyRed,
 	}
 
 	respondWithJSON(w, 201, rv)

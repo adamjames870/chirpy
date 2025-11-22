@@ -70,6 +70,7 @@ func (s *apiState) handlerApiLogin(w http.ResponseWriter, r *http.Request) {
 		Email:        usr.Email,
 		Token:        accessTkn,
 		RefreshToken: savedRefreshToken.Token,
+		IsChirpyRed:  usr.IsChirpyRed,
 	}
 
 	respondWithJSON(w, 200, rv)

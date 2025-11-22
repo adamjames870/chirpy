@@ -32,5 +32,9 @@ func (state *apiState) CreateEndpoints() error {
 	state.mux.HandleFunc("GET /admin/metrics", state.metricsHandler)
 	state.mux.HandleFunc("POST /admin/reset", state.handlerApiReset)
 
+	// ----------- Webhooks ----------------
+
+	state.mux.HandleFunc("POST /api/polka/webhooks", state.handlerWebhookPolka)
+
 	return nil
 }
