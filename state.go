@@ -17,4 +17,5 @@ type apiState struct {
 	mux            *http.ServeMux
 	platform       string
 	secret_string  string
+	polka_api      string
 }

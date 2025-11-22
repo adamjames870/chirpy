@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/adamjames870/chirpy/internal/auth"
 	"github.com/google/uuid"
 )
 
@@ -30,6 +31,17 @@ func (s *apiState) handlerWebhookPolka(w http.ResponseWriter, r *http.Request) {
 
 	if paramsHook.Event != upgrade_event {
 		respondWithJSON(w, 204, nil)
+		return
+	}
+
+	inputTkn, errTkn := auth.GetAPIKey(r.Header)
+	if errTkn != nil {
+		respondWithError(w, 401, "unable to parse input token: "+errTkn.Error())
+		return
+	}
+
+	if inputTkn != s.polka_api {
+		respondWithError(w, 401, "incorrect api key")
 		return
 	}
 

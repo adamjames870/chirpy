@@ -12,6 +12,7 @@ func (state *apiState) LoadState() error {
 	state.dbQueries = database.New(loadDb())
 	state.platform = loadPlatform()
 	state.secret_string = loadSecretString()
+	state.polka_api = loadPolkaApi()
 	return nil
 }
 
@@ -31,4 +32,8 @@ func loadPlatform() string {
 
 func loadSecretString() string {
 	return os.Getenv("SECRET")
+}
+
+func loadPolkaApi() string {
+	return os.Getenv("POLKA_KEY")
 }
